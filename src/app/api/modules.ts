@@ -1,10 +1,9 @@
-// src/app/api/modules.ts
 import { promises as dns } from "dns";
-import { encode, decode, Packet } from "dns-packet";
+import { encode, decode, Packet, Answer } from "dns-packet";
 
 export async function handleDnsQuery(
-  input: Buffer | ArrayBuffer | Uint8Array
-): Promise<Buffer> {
+  input: Buffer | ArrayBuffer | Uint8Array,
+): Promise<[Buffer, Answer[] | undefined]> {
   let buf: Buffer;
 
   if (Buffer.isBuffer(input)) {
@@ -54,5 +53,5 @@ export async function handleDnsQuery(
     answers,
   };
 
-  return encode(response); // Node Buffer
+  return [encode(response), response.answers];
 }
