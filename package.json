@@ -1,13 +1,14 @@
 {
-  "name": "doh-worker",
-  "version": "0.1.0",
+  "name": "dns-over-nextjs",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "test": "jest src/app/test.ts"
   },
   "dependencies": {
     "next": "15.5.7",

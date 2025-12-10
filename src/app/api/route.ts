@@ -4,14 +4,14 @@ import { handleDnsQuery } from "./modules";
 export async function POST(req: NextRequest) {
   try {
     const buf = Buffer.from(await req.arrayBuffer());
-    const respBuf = await handleDnsQuery(buf);
+    const respBuf = (await handleDnsQuery(buf))[0];
     return new Response(new Uint8Array(respBuf), {
       status: 200,
       headers: { "Content-Type": "application/dns-message" },
     });
   } catch (err) {
     console.error("POST error:", err);
-    return new Response("Invalid DNS query", { status: 400 });
+    return new Response(`POST error: ${err}`, { status: 400 });
   }
 }
 
@@ -19,17 +19,14 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const domain = url.searchParams.get("domain");
-    const isHelp: boolean = url.searchParams.has("help");
 
-    if (!domain || domain.trim() === "")
+    if (url.toString().endsWith("/api") || domain?.trim() === "")
       return new Response(null, {
         status: 307,
         headers: {
           Location: "/",
         },
       });
-
-    if (isHelp) return new Response("Help is comming", { status: 200 });
 
     const queryPacket = {
       type: "query" as const,
@@ -39,14 +36,26 @@ export async function GET(req: NextRequest) {
     };
 
     const buf = Buffer.from(require("dns-packet").encode(queryPacket));
-    const respBuf = await handleDnsQuery(buf);
+    const answers = (await handleDnsQuery(buf))[1];
+    if (answers?.length === 0) {
+      return new Response(
+        JSON.stringify(
+          {
+            status: "error",
+            message: `No DNS records found for ${domain}`,
+          },
+          null,
+          2,
+        ),
+        { status: 404 },
+      );
+    }
 
-    return new Response(new Uint8Array(respBuf), {
-      status: 200,
-      headers: { "Content-Type": "application/dns-message" },
-    });
+    return new Response(
+      JSON.stringify({ status: "ok", data: { answers } }, null, 2),
+    );
   } catch (err) {
     console.error("GET error:", err);
-    return new Response("Invalid DNS query", { status: 400 });
+    return new Response(`GET error: ${err}`, { status: 400 });
   }
 }
