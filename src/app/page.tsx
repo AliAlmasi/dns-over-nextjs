@@ -1,43 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-async function getIp(domain: string) {
-  if (!domain) throw new Error("no domain specified");
+type Answer = { data: string };
 
-  const res: {
+async function getIp(domain: string): Promise<Answer[]> {
+  if (!domain) throw new Error("No domain specified");
+
+  const resp = await fetch(`/api?domain=${encodeURIComponent(domain)}`);
+  if (!resp.ok) throw new Error(`No result found`);
+
+  const json: {
     status: string;
-    data: { answers: Array<{ data: string }> };
-  } = await (await fetch(`/api?domain=${domain}`)).json();
+    data?: { answers?: Answer[] };
+  } = await resp.json();
 
-  if (res.status === "ok") return res.data.answers;
-  else throw new Error("fetch response not ok");
+  if (json.status === "ok" && json.data?.answers) return json.data.answers;
+  throw new Error("Fetch response not ok");
 }
 
 export default function Home() {
-  const [ips, setIps] = useState<Array<{ data: string }>>([]);
+  const [ips, setIps] = useState<Answer[]>([]);
+  const [showIp, setShowIp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const dinput = useRef<HTMLInputElement | null>(null);
 
   const fetchData = async () => {
-    const input = (document.getElementById("dinput") as HTMLInputElement).value;
-    try {
-      const answers = await getIp(input);
-      setIps(answers);
-    } catch (error) {
-      alert("Error. See console for details.");
-      console.error(error);
-    }
+    if (!loading) {
+      const domain = dinput.current?.value?.trim() || "";
+      if (!domain) {
+        alert("Please enter a domain");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const answers = await getIp(domain);
+        setIps(answers);
+        setShowIp(true);
+      } catch (error) {
+        alert(`${(error as Error).message}.`);
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    } else return;
   };
 
   return (
     <main>
+      <h2>Enter a domain:</h2>
       <input
-        type="text"
+        ref={dinput}
         id="dinput"
         onKeyDown={(e) => (e.key === "Enter" ? fetchData() : null)}
-        placeholder="one.one.one.one"
+        onChange={() => {
+          if (showIp) setTimeout(() => setShowIp(false), 1000);
+        }}
+        placeholder="example.com"
       />
-      <button onClick={fetchData}>Go</button>
-      <p id="ips">{ips.map((ip) => ip.data).join(" / ")}</p>
+      <button onClick={fetchData} disabled={loading}>
+        {loading ? "Looking up..." : "Go"}
+      </button>
+      {showIp ? <p id="ips">{ips.map((ip) => ip.data).join(" / ")}</p> : null}
     </main>
   );
 }
