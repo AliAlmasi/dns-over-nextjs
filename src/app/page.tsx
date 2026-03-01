@@ -25,11 +25,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const dinput = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const input = document.querySelector("input#dinput") as HTMLInputElement;
-    input.value = "alialmasi.ir";
-    input.focus();
-  });
+  useEffect(() =>
+    (document.querySelector("input#dinput") as HTMLInputElement).focus(),
+  );
 
   const fetchData = async () => {
     if (!loading) {
