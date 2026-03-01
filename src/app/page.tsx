@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Answer = { data: string };
 
 async function getIp(domain: string): Promise<Answer[]> {
   if (!domain) throw new Error("No domain specified");
 
-  const resp = await fetch(`/api?domain=${encodeURIComponent(domain)}`);
+  const resp = await fetch(`/dns?domain=${encodeURIComponent(domain)}`);
   if (!resp.ok) throw new Error(`No result found`);
 
   const json: {
@@ -24,6 +24,12 @@ export default function Home() {
   const [showIp, setShowIp] = useState(false);
   const [loading, setLoading] = useState(false);
   const dinput = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const input = document.querySelector("input#dinput") as HTMLInputElement;
+    input.value = "alialmasi.ir";
+    input.focus();
+  });
 
   const fetchData = async () => {
     if (!loading) {

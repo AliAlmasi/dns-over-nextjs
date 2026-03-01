@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const domain = url.searchParams.get("domain")!;
 
-    if (url.toString().endsWith("/api") || domain?.trim() === "")
+    if (!url.searchParams.has("domain"))
       return new Response(null, {
         status: 307,
         headers: {
@@ -46,14 +46,14 @@ export async function GET(req: NextRequest) {
             message: `No DNS records found for ${domain}`,
           },
           null,
-          2
+          2,
         ),
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return new Response(
-      JSON.stringify({ status: "ok", data: { answers } }, null, 2)
+      JSON.stringify({ status: "ok", data: { answers } }, null, 2),
     );
   } catch (err) {
     console.error("GET error:", err);

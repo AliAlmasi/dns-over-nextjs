@@ -1,4 +1,4 @@
-import { POST } from "./api/route";
+import { POST } from "./dns/route";
 import { encode, decode, RecordType, Packet } from "dns-packet";
 
 class MockNextRequest {
